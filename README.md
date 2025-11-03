@@ -1,1 +1,1 @@
-Enables users get recommmendation of movies
+Enables users to get recommmendation of movies
