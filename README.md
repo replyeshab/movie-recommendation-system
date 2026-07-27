@@ -9,252 +9,262 @@
 ![Status](https://img.shields.io/badge/Status-Active%20Development-success)
 
 ---
+# CineAI
+
+A **two-stage hybrid movie recommendation system** that combines collaborative filtering, content-based retrieval, popularity modeling, and feature-based ranking to generate personalized movie recommendations.
+
+CineAI is built using the **MovieLens 32M** dataset and follows a modular recommendation architecture inspired by modern large-scale recommender systems. The project emphasizes reproducible experimentation, leakage-free evaluation, and extensible system design.
+
+---
 
 ## Overview
 
-CineAI is a production-inspired hybrid recommendation engine designed to generate personalized movie recommendations by combining multiple recommendation strategies into a single ranking pipeline.
+Most recommendation systems rely on a single recommendation strategy, making them susceptible to issues such as cold-start users, sparsity, or overspecialized recommendations.
 
-Unlike traditional recommendation systems that rely on only one recommendation algorithm, CineAI intelligently combines multiple recommendation signals to improve recommendation quality and handle real-world recommendation challenges such as:
+CineAI addresses these challenges by adopting a **two-stage recommendation pipeline**:
 
-- Cold Start Users
-- Sparse User Profiles
-- Personalized Recommendations
-- Feature Engineering
-- Dynamic Ranking
-- Recommendation Validation
+- **Stage 1:** Retrieve relevant candidate movies using multiple recommendation engines.
+- **Stage 2:** Rank the retrieved candidates using engineered recommendation features.
 
-The goal of this project is to simulate how modern streaming platforms combine multiple recommendation techniques instead of relying on a single machine learning model.
+This separation enables each stage to evolve independently and mirrors the architecture used in production recommendation systems.
 
 ---
 
-# Features
+## System Architecture
 
-## Hybrid Recommendation Engine
+```
 
-Combines multiple recommendation algorithms into one ranking system.
+                          MovieLens 32M
+                                │
+                                ▼
+                     Feature Engineering
+                                │
+                                ▼
+══════════════════════════════════════════════════════
+           Stage 1 : Candidate Generation
+══════════════════════════════════════════════════════
 
-- Collaborative Filtering
-- Content-Based Recommendation
-- Popularity-Based Recommendation
-- Genre Preference Learning
-
----
-
-## Personalized Recommendations
-
-Recommendations are generated using:
-
-- User Rating History
-- User Preferences
-- Similar Users
-- Similar Movies
-- Genre Interests
-- Popularity Signals
-
----
-
-## Cold Start Handling
-
-Users with no previous interactions receive recommendations using IMDb weighted popularity ranking.
-
----
-
-## Sparse User Handling
-
-Users with very little interaction history automatically receive different recommendation weights for better personalization.
-
----
-
-## Genre Preference Modeling
-
-Builds a personalized genre profile for every user by learning preferences from historical ratings.
-
----
-
-## Feature Engineering
-
-The final recommendation score is computed using multiple engineered features.
-
-- Collaborative Score
-- Content Similarity
-- Popularity Score
-- Genre Score
-- Rating Score
-- Rating Count Score
-- Movie Recency
-
----
-
-## Recommendation Validation
-
-Automatically checks for
-
-- Duplicate Recommendations
-- Already Watched Movies
-- Missing Scores
-
-before returning the final recommendation list.
-
----
-
-# System Architecture
-
-```text
-                   User
+     Collaborative Filtering (Truncated SVD)
                      │
-          ┌──────────┴──────────┐
-          │                     │
-    Cold Start           Existing User
-          │                     │
-          └──────────┬──────────┘
+
+        Content-Based Retrieval (TF-IDF)
                      │
-         Sparse User Detection
+
+      Popularity-Based Recommendation
                      │
-      ┌──────────────┼──────────────┐
-      │              │              │
-Collaborative     Content       Popularity
- Filtering       Recommendation Recommendation
-      │              │              │
-      └──────────────┼──────────────┘
+                     ▼
+
+          Unified Candidate Pool
+
+══════════════════════════════════════════════════════
+             Stage 2 : Candidate Ranking
+══════════════════════════════════════════════════════
+
+For every candidate movie:
+
+• Collaborative Score
+• Content Similarity Score
+• Genre Preference Score
+• Popularity Score
+• Average Rating
+• Rating Count
+• Recency Score
+
                      │
-          Genre Preference Model
+                     ▼
+
+        Feature-Based Hybrid Ranking
+
                      │
-          Feature Engineering
-                     │
-           Dynamic Hybrid Ranking
-                     │
-       Recommendation Validation
-                     │
-          Final Recommendations
+                     ▼
+
+     Personalized Top-K Recommendations
+
 ```
 
 ---
 
-# Tech Stack
+## Features
 
-## Programming
+### Two-Stage Recommendation Architecture
 
-- Python
+Instead of directly recommending movies from a single model, CineAI first retrieves candidate movies and subsequently ranks them using multiple recommendation signals.
 
-## Machine Learning
+---
 
-- Scikit-Learn
+### Collaborative Filtering
+
 - Matrix Factorization
+- Truncated Singular Value Decomposition (SVD)
+- Captures latent user-item interactions
+
+---
+
+### Content-Based Retrieval
+
+- TF-IDF movie representation
+- Cosine similarity search
+- Content-aware recommendations
+
+---
+
+### Popularity Modeling
+
+Popularity candidates are generated using IMDb weighted ratings instead of simple averages to reduce bias toward movies with few interactions.
+
+---
+
+### Personalized Genre Modeling
+
+User-specific genre preferences are estimated from historical interactions and incorporated into the final ranking stage.
+
+---
+
+### Hybrid Feature-Based Ranking
+
+Each recommendation candidate is represented using multiple engineered features.
+
+| Feature | Description |
+|----------|-------------|
+| Collaborative Score | Latent user preference |
+| Content Score | Content similarity |
+| Genre Preference Score | User affinity toward movie genres |
+| Average Rating | Historical movie quality |
+| Rating Count | Confidence estimate |
+| Popularity Score | Global popularity |
+| Recency Score | Preference toward recent movies |
+
+The ranking engine combines these features to generate the final recommendation list.
+
+---
+
+### Cold-Start Recommendation
+
+Users with limited interaction history are handled using popularity-based recommendations generated through IMDb weighted ratings.
+
+---
+
+## Recommendation Pipeline
+
+1. Dataset preprocessing
+2. Feature engineering
+3. Train / Validation / Test split
+4. Collaborative candidate generation
+5. Content candidate generation
+6. Popularity candidate generation
+7. Candidate merging
+8. Feature construction
+9. Hybrid ranking
+10. Top-K recommendation generation
+11. Offline evaluation
+
+---
+
+## Evaluation
+
+The project follows a leakage-free evaluation protocol.
+
+Training interactions are used exclusively for model construction.
+
+Validation interactions are reserved for model tuning.
+
+Testing interactions are used only for final offline evaluation.
+
+### Current Evaluation Metrics
+
+| Metric |
+|---------|
+| Precision@K |
+| Recall@K |
+| MAP@K |
+| NDCG@K |
+| Coverage |
+| Latency |
+| Novelty |
+| Diversity |
+| Hit Rate@K |
+
+---
+
+## Dataset
+
+MovieLens 32M
+
+- 32 Million Ratings
+- 2 Million Tag Applications
+
+---
+
+## Technology Stack
+
+### Machine Learning
+
+- Scikit-learn
+- NumPy
+- Pandas
+- SciPy
+
+### Recommendation Algorithms
+
+- Truncated SVD
 - TF-IDF
 - Cosine Similarity
-- KNN
-- Hybrid Recommendation Systems
 
-## Data Processing
+### Engineering
 
-- Pandas
-- NumPy
-
-## Model Persistence
-
-- Joblib
-- Pickle
-
-## Development
-
-- Google Colab
-- Git
-- GitHub
+- Sparse Matrix Operations
+- Joblib Serialization
+- Modular Pipeline Design
 
 ---
 
----
-
-# Dataset
-
-This project uses the MovieLens dataset for learning user preferences and generating personalized recommendations.
-
-The recommendation engine learns from:
-
-- User Ratings
-- Movie Metadata
-- Genres
-- Popularity Statistics
 
 ---
 
-# Current Progress
+## Engineering Highlights
 
-- ✅ Hybrid Recommendation Engine
-- ✅ Collaborative Filtering
-- ✅ Content-Based Recommendation
-- ✅ Popularity Recommendation
-- ✅ Cold Start Handling
-- ✅ Sparse User Detection
-- ✅ Genre Preference Learning
-- ✅ Feature Engineering
-- ✅ Recommendation Validation
-
----
-
-# Currently Working On
-
-- Explainable Recommendations
-- Recommendation Confidence Scores
-- Evaluation Metrics
-- Frontend Development
-- UI/UX Improvements
-- Model Optimization
-- Production Deployment
+- Two-stage recommendation architecture
+- Hybrid recommendation pipeline
+- Leakage-free evaluation protocol
+- Modular candidate generation
+- Feature-based ranking
+- Cold-start recommendation strategy
+- Sparse matrix optimization
+- Artifact serialization for reproducibility
 
 ---
 
-#  Future Roadmap
+## Current Status
 
-- Precision@K
-- Recall@K
-- MAP
-- NDCG
-- Coverage
-- Diversity Metrics
+Implemented
 
----
-
-## Explainable AI
-
-Every recommendation will include explanations such as
-
-- Similar users liked this movie
-- Matches your preferred genres
-- Highly rated by the community
-- Recently released
-
----
-
-## Production Features
-
-- User Authentication
-- Watchlists
-- Recommendation History
-- Search Engine
-- Real-Time Recommendations
-- REST API Deployment
-
----
-
-#  What I Learned
-
-This project helped me understand
-
-- Hybrid Recommendation Systems
-- Recommendation Ranking
-- Cold Start Problems
-- Sparse User Handling
 - Feature Engineering
-- Machine Learning Pipelines
-- Recommendation Validation
-- Model Serialization
-- Modular ML System Design
+- Content-Based Recommendation
+- Collaborative Filtering
+- Popularity Recommendation
+- Two-Stage Hybrid Recommendation
+- Cold-Start Recommendation
+- Offline Evaluation Framework
+
+Planned
+
+- Learning-to-Rank (XGBoost / LightGBM)
+- Explainable Recommendations
+- ANN Retrieval (FAISS)
+- FastAPI Deployment
+- Docker Support
 
 ---
 
-# 🤝 Contributing
+## Future Work
 
-Contributions, issues and feature requests are welcome.
+Future improvements include:
 
-If you'd like to contribute, feel free to open an issue or submit a pull request.
+- Learning-to-Rank for candidate ranking
+- Explainable recommendation generation
+- Approximate nearest-neighbor retrieval
+- Real-time recommendation service
+- Online A/B evaluation
+- User feedback incorporation
+
+---
